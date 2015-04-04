@@ -184,12 +184,12 @@ function sharePoll() {
 // if it seems that they've already voted and somehow bypassed the ui, just show what their
 // original vote was
 function functionForResponse(response) {
-    alert('functionForResponse');
     return function() {
     	if(Omlet.getIdentity().principal in myDoc.voters) {
 	    var voter = myDoc.voters[Omlet.getIdentity().principal];
 	    showPollResults(voter.vote);
 	} else {
+            alert('functionForResponse: ' + response);
             documentApi.update(myDocId, Update, { "option":response, "voter":Omlet.getIdentity() }, ReceiveUpdate);
             showPollResults(response);
         }
@@ -216,7 +216,7 @@ function functionForNewResponse(response_number, response_text) {
             myDoc.poll['response'+ response_number] = response_text;
             */
 
-            documentApi.update(myDocId, Update, { "option":response_number, "option_text":response_text, "voter":Omlet.getIdentity() }, ReceiveUpdate);
+            documentApi.update(myDocId, Update, { "option":response_number, "voter":Omlet.getIdentity() }, ReceiveUpdate);
             showPollResults(response_number);
         }
     };
@@ -445,6 +445,7 @@ function ShowQuestionForm() {
         $("#submitquestion"+i).fastClick(functionForResponse(i));
     }
 
+    /*
     $("#app").append('<div id="responses"></div><div id="moreResponses"><img src="images/option.png" weight="270px" height="32px"></img></div></div>');
 
 
@@ -452,6 +453,7 @@ function ShowQuestionForm() {
     addNewResponse(new_response_option_number);
     //$("#app").append('<div class="poll_answer" id="submitquestion'+ new_response_option_number +'">'+ String.fromCharCode(65 + new_response_option_number) +': ' + myDoc.poll['response'+ new_response_option_number] + '</div>');
     $("#moreResponses").fastClick(functionForNewResponse(new_response_option_number, $('#new_response_text_field').val()));
+    */
 
     $("#app").append('<img src="images/EGG-2.png" class="omlet_second"></img>');
 }
