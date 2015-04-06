@@ -7,6 +7,8 @@ var myDoc;
 var myDocId;
 
 function watchDocument(docref, OnUpdate) {
+    //alert('watchDocument');
+
     documentApi.watch(docref, function(updatedDocRef) {
         if (docref != myDocId) {
             console.log("Wrong document!!");
@@ -92,7 +94,9 @@ function Initialize(old, params) {
 // Any other time we call update, we're not passing in the full doc, just a set of params
 // for updating the old doc
 function Update(old, params) {
-    alert('Update');
+    //alert('Update ' + params['new_option']);
+    //alert('Update');
+
     old.pollCounts[params["option"]]++;
     var time = new Date().getTime();
     old.voters[params.voter.principal] = {"name":params.voter.name, "vote":params["option"], "time":time};
@@ -103,7 +107,6 @@ function Update(old, params) {
 
 //Set up what the doc looks like with some default values
 function InitialDocument() {
-    alert('InitialDocument');
     var poll = {
         question : $('textarea#question').val()
     }
@@ -156,7 +159,6 @@ function DocumentCreated(doc) {
 //Check if the user has set a question and has at least 1 response option
 //Then kick off the doc creation process
 function sharePoll() {
-    alert('sharePoll');
     var need_write_q = i18n.t("Need_write_question");
     var need_write_o = i18n.t("Need_write_option");
     if($('textarea#question').val().length == 0) {
@@ -189,43 +191,32 @@ function functionForResponse(response) {
 	    var voter = myDoc.voters[Omlet.getIdentity().principal];
 	    showPollResults(voter.vote);
 	} else {
-            alert('functionForResponse: ' + response);
-            documentApi.update(myDocId, Update, { "option":response, "voter":Omlet.getIdentity() }, ReceiveUpdate);
+            documentApi.update(myDocId, Update, {"option":response, "voter":Omlet.getIdentity() }, ReceiveUpdate);
             showPollResults(response);
         }
     };
 }
 
-function functionForNewResponse(response_number, response_text) {
-    alert('functionForNewResponse');
+/*
+function functionForNewResponse(response_number) {
     return function() {
         if(Omlet.getIdentity().principal in myDoc.voters) {
         var voter = myDoc.voters[Omlet.getIdentity().principal];
         showPollResults(voter.vote);
     } else {
-            /*
-             for(var i = 0; i < myDoc.pollCounts.length; i++) {
-                var letter = String.fromCharCode(65 + i);
-                $("#app").append('<div class="poll_answer" id="submitquestion'+i+'">'+letter+': ' + myDoc.poll['response'+i] + '</div>');
-                $("#submitquestion"+i).fastClick(functionForResponse(i));
-            }
-            */
-
-            /*
-            myDoc.pollCounts[response_number] = 1;
-            myDoc.poll['response'+ response_number] = response_text;
-            */
-
-            documentApi.update(myDocId, Update, { "option":response_number, "voter":Omlet.getIdentity() }, ReceiveUpdate);
+            alert('functionForNewResponse');
+            alert('response_number: ' + response_number);
+            alert('response_text ' + $('#new_response_text_field').val());
+            documentApi.update(myDocId, Update, { "new_option": true , "option":response_number, "option_text":$('#new_response_text_field').val() , "voter":Omlet.getIdentity() }, ReceiveUpdate);
             showPollResults(response_number);
         }
     };
 }
+*/
 
 // get a function to bind to each results bar
 // tapping on the bar shows a list of who voted for it
 function getToggleFunction(i) {
-    alert('getToggleFunction');
     return function() {
         if($("#voter_list_"+i).css('display') == "none") {
             $("#voter_list_"+i).slideDown('slow', function() {
@@ -244,9 +235,6 @@ function getToggleFunction(i) {
 // update the results page, with some cute animating bars
 // this gets called from the update callback method that was passed to Omlet
 function updateResults() {
-
-    alert('updateResults');
-
     var pollCounts = myDoc.pollCounts;
 
     var response_text = i18n.t("Response");
@@ -281,9 +269,6 @@ function updateResults() {
 
 //show the results without having to vote
 function showJustPollResults() {
-
-    alert('showJustPollResults');
-
     var pollCounts = myDoc.pollCounts;
     var response_text = i18n.t("Response");
     var responses_text = i18n.t("Responses");
@@ -325,9 +310,6 @@ function showJustPollResults() {
 
 // show the results after having voted
 function showPollResults(response) { 
-
-    alert('showPollResults');
-
     var answer = myDoc.poll['response'+response];
     var answerLetter = String.fromCharCode(65 + response);
     var pollCounts = myDoc.pollCounts;
@@ -398,28 +380,15 @@ function showPollResults(response) {
 
 // add additional response fields to the ui
 function addResponse() {
-    alert('addResponse');
     var option = String.fromCharCode(65 + responseCount);
     option_text = i18n.t('Option');
     $("#responses").append('<p>'+option_text+' ' + option + '</p><input id="answer'+responseCount+'" class="form_format" type="text">');
     responseCount++;
 }
 
-function addNewResponse(response_number) {
-    alert('addNewResponse');
-    //var option = String.fromCharCode(65 + responseCount);
-    option_text = i18n.t('New Option');
-    $("#responses").append('<p>'+option_text+' ' + '</p><input id="new_response_text_field" class="form_format" type="text">');
-    
-    //$("#app").append('<div class="poll_answer" id="submitquestion'+ new_response_option_number +'">'+ String.fromCharCode(65 + new_response_option_number) +': ' + myDoc.poll['response'+ new_response_option_number] + '</div>');  
-    //responseCount++;
-}
-
 //update callback method that is passed to Omlet when you start "watching" the doc for changes
 function ReceiveUpdate(doc) {
     myDoc = doc;
-
-    alert('ReceiveUpdate');
 
     if(showingResults) {
         updateResults();
@@ -432,9 +401,18 @@ function ReceiveUpdate(doc) {
     }
 }
 
+/*
+function addNewResponse() {
+    option_text = i18n.t('New Option');
+    $("#responses").append('<p>'+option_text+' ' + '</p><input id="new_response_text_field" class="form_format" type="text">');
+}
+*/
+
+
+
+
 //show the poll form
 function ShowQuestionForm() {
-    alert('ShowQuestionForm');
     var poll_question = myDoc.poll.question.replace(/\r\n|\r|\n/g,'<br>');
     $("#app").html("");
     $("#app").append('<div id="poll_question">'+poll_question+'</div>');
@@ -445,14 +423,17 @@ function ShowQuestionForm() {
         $("#submitquestion"+i).fastClick(functionForResponse(i));
     }
 
-    /*
-    $("#app").append('<div id="responses"></div><div id="moreResponses"><img src="images/option.png" weight="270px" height="32px"></img></div></div>');
 
+    /*
+    $("#app").append('<div id="responses"></div><div id="moreResponses"><img src="images/option.png" weight="270px" height="32px"></img></div>');
 
     var new_response_option_number = myDoc.pollCounts.length;
-    addNewResponse(new_response_option_number);
-    //$("#app").append('<div class="poll_answer" id="submitquestion'+ new_response_option_number +'">'+ String.fromCharCode(65 + new_response_option_number) +': ' + myDoc.poll['response'+ new_response_option_number] + '</div>');
-    $("#moreResponses").fastClick(functionForNewResponse(new_response_option_number, $('#new_response_text_field').val()));
+    addNewResponse();
+    
+    alert('ShowQuestionForm');
+    alert($("#moreResponses"));
+    $("#moreResponses").fastClick(functionForNewResponse(new_response_option_number));
+    //alert('#new_response_text_field: ' + $('#new_response_text_field').val());
     */
 
     $("#app").append('<img src="images/EGG-2.png" class="omlet_second"></img>');
@@ -460,7 +441,6 @@ function ShowQuestionForm() {
 
 //show the poll creation form
 function ShowEmptyQuestionForm() {
-    alert('ShowEmptyQuestionForm');
     var question = i18n.t('Question');
     var create = i18n.t('Create');
 
