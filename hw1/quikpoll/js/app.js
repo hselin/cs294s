@@ -93,15 +93,47 @@ function Initialize(old, params) {
 
 // Any other time we call update, we're not passing in the full doc, just a set of params
 // for updating the old doc
+/*
 function Update(old, params) {
-    //alert('Update ' + params['new_option']);
-    //alert('Update');
-
-    old.pollCounts[params["option"]]++;
     var time = new Date().getTime();
-    old.voters[params.voter.principal] = {"name":params.voter.name, "vote":params["option"], "time":time};
+    if(params["response_text"] == undefined)
+    {
+        old.pollCounts[params["option"]]++;
+        old.voters[params.voter.principal] = {"name":params.voter.name, "vote":params["option"], "time":time};
+    }
+    else
+    {
+        var index = 0;
+
+        old.poll['response' + index] = params["response_text"];
+        old.pollCounts[index] = 1;
+        old.responses.push(params["response_text"]);
+        old.poll["responses"] = JSON.stringify(old.responses);
+        old.voters[params.voter.principal] = {"name":params.voter.name, "vote":index, "time":time};
+    }
     return old;
-};
+}
+*/
+
+function Update(old, params) {
+    var time = new Date().getTime();
+
+    if(params["response_text"] == undefined)
+    {
+        old.pollCounts[params["option"]]++;
+        old.voters[params.voter.principal] = {"name":params.voter.name, "vote":params["option"], "time":time};
+    }
+    else
+    {
+        var index = old.pollCounts.length;
+
+        old.poll['response'+index] = params["response_text"];
+        old.pollCounts[index] = 1;
+        old.voters[params.voter.principal] = {"name":params.voter.name, "vote":index, "time":time};
+    }
+
+    return old;
+}
 
 /***************************************/
 
@@ -174,8 +206,8 @@ function sharePoll() {
         }
     }
     if(count == 0) {
-	alert(need_write_o);
-	return;
+    alert(need_write_o);
+    return;
     }
 
     initDocument();
@@ -187,32 +219,36 @@ function sharePoll() {
 // original vote was
 function functionForResponse(response) {
     return function() {
-    	if(Omlet.getIdentity().principal in myDoc.voters) {
-	    var voter = myDoc.voters[Omlet.getIdentity().principal];
-	    showPollResults(voter.vote);
-	} else {
+        if(Omlet.getIdentity().principal in myDoc.voters) {
+        var voter = myDoc.voters[Omlet.getIdentity().principal];
+        showPollResults(voter.vote);
+    } else {
             documentApi.update(myDocId, Update, {"option":response, "voter":Omlet.getIdentity() }, ReceiveUpdate);
             showPollResults(response);
         }
     };
 }
 
-/*
-function functionForNewResponse(response_number) {
+
+function functionForNewResponse() {
     return function() {
         if(Omlet.getIdentity().principal in myDoc.voters) {
         var voter = myDoc.voters[Omlet.getIdentity().principal];
         showPollResults(voter.vote);
     } else {
-            alert('functionForNewResponse');
-            alert('response_number: ' + response_number);
-            alert('response_text ' + $('#new_response_text_field').val());
-            documentApi.update(myDocId, Update, { "new_option": true , "option":response_number, "option_text":$('#new_response_text_field').val() , "voter":Omlet.getIdentity() }, ReceiveUpdate);
+            //alert('functionForNewResponse');
+            //alert('response_text ' + $('#new_response_text_field').val());
+            if($('#new_response_text_field').val().length == 0)
+            {
+                alert(i18n.t("New_response"));
+                return;
+            }
+
+            documentApi.update(myDocId, Update, {"response_text":$('#new_response_text_field').val(), "voter":Omlet.getIdentity() }, ReceiveUpdate);
             showPollResults(response_number);
         }
     };
 }
-*/
 
 // get a function to bind to each results bar
 // tapping on the bar shows a list of who voted for it
@@ -241,10 +277,10 @@ function updateResults() {
     var responses_text = i18n.t("Responses");  
     var totalVotes = 0;
     for(var i = 0; i < pollCounts.length; i++) {
-	totalVotes += pollCounts[i];
+    totalVotes += pollCounts[i];
     }
 
-    var responseString = (totalVotes == 1) ? response_text : responses_text;	
+    var responseString = (totalVotes == 1) ? response_text : responses_text;    
     //var responseString = (totalVotes == 1) ? "response" : "responses";
     $("#poll_count").text(totalVotes+' '+responseString);
 
@@ -275,7 +311,7 @@ function showJustPollResults() {
     var poll_result = i18n.t("Poll_results");
     var totalVotes = 0;
     for(var i = 0; i < pollCounts.length; i++) {
-	totalVotes += pollCounts[i];
+    totalVotes += pollCounts[i];
     }
 
     var poll_question = myDoc.poll.question.replace(/\r\n|\r|\n/g,'<br>');
@@ -327,7 +363,7 @@ function showPollResults(response) {
 
     var totalVotes = 0;
     for(var i = 0; i < pollCounts.length; i++) {
-	totalVotes += pollCounts[i];
+    totalVotes += pollCounts[i];
     }
 
     var responseString = (totalVotes == 1) ? response_text : responses_text;
@@ -365,13 +401,13 @@ function showPollResults(response) {
 
     var share = function() {
         var rdl = Omlet.createRDL({
-    	    noun: poll_response_text,
-    	    displayTitle: quickpoll_response,
-    	    displayThumbnailUrl: "http://dhorh0z3k6ro7.cloudfront.net/apps/quikpoll/images/quikpoll.png",
-    	    displayText: i_vote + ": " + answer,
-    	    callback: encodeURI(window.location.href)
-    	});
-    	Omlet.exit(rdl);
+            noun: poll_response_text,
+            displayTitle: quickpoll_response,
+            displayThumbnailUrl: "http://dhorh0z3k6ro7.cloudfront.net/apps/quikpoll/images/quikpoll.png",
+            displayText: i_vote + ": " + answer,
+            callback: encodeURI(window.location.href)
+        });
+        Omlet.exit(rdl);
     }
 
     $("#share").fastClick(share);
@@ -401,12 +437,11 @@ function ReceiveUpdate(doc) {
     }
 }
 
-/*
+
 function addNewResponse() {
     option_text = i18n.t('New Option');
     $("#responses").append('<p>'+option_text+' ' + '</p><input id="new_response_text_field" class="form_format" type="text">');
 }
-*/
 
 
 
@@ -424,17 +459,17 @@ function ShowQuestionForm() {
     }
 
 
-    /*
-    $("#app").append('<div id="responses"></div><div id="moreResponses"><img src="images/option.png" weight="270px" height="32px"></img></div>');
 
-    var new_response_option_number = myDoc.pollCounts.length;
+    $("#app").append('<div id="responses"></div><div id="moreResponses"><img src="images/new.png" weight="270px" height="32px"></img></div>');
+    //$("#app").append('<div id="responses"></div><div id="moreResponses">Create New Response</img></div>');
+
+    //var new_response_option_number = myDoc.pollCounts.length;
     addNewResponse();
     
-    alert('ShowQuestionForm');
-    alert($("#moreResponses"));
-    $("#moreResponses").fastClick(functionForNewResponse(new_response_option_number));
-    //alert('#new_response_text_field: ' + $('#new_response_text_field').val());
-    */
+    //alert('ShowQuestionForm');
+    ///alert($("#moreResponses"));
+    $("#moreResponses").fastClick(functionForNewResponse());
+
 
     $("#app").append('<img src="images/EGG-2.png" class="omlet_second"></img>');
 }
@@ -465,4 +500,3 @@ Omlet.ready(function() {
       }
     });
 });
-
