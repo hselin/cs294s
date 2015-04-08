@@ -217,7 +217,6 @@ function functionForNewResponse() {
             }
 
             documentApi.update(myDocId, Update, { "option":myDoc.pollCounts.length, "response_text":$('#new_response_text_field').val(), "voter":Omlet.getIdentity() }, ReceiveUpdate);
-            showPollResults(response_number);
         }
     };
 }
