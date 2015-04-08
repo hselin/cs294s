@@ -101,11 +101,9 @@ function Update(old, params) {
     }
     else
     {
-        var index = old.pollCounts.length;
-
-        old.poll['response'+index] = params["response_text"];
-        old.pollCounts[index] = 1;
-        old.voters[params.voter.principal] = {"name":params.voter.name, "vote":index, "time":time};
+        old.poll['response'+params["option"]] = params["response_text"];
+        old.pollCounts[params["option"]] = 1;
+        old.voters[params.voter.principal] = {"name":params.voter.name, "vote":params["option"], "time":time};
     }
 
     return old;
@@ -218,7 +216,7 @@ function functionForNewResponse() {
                 return;
             }
 
-            documentApi.update(myDocId, Update, { "response_text":$('#new_response_text_field').val(), "voter":Omlet.getIdentity() }, ReceiveUpdate);
+            documentApi.update(myDocId, Update, { "option":myDoc.pollCounts.length, "response_text":$('#new_response_text_field').val(), "voter":Omlet.getIdentity() }, ReceiveUpdate);
             showPollResults(response_number);
         }
     };
